@@ -1,0 +1,79 @@
+﻿@{
+    var userRole = Context.Session.GetString("Role");
+    var currentController = ViewContext.RouteData.Values["controller"].ToString();
+    var currentAction = ViewContext.RouteData.Values["action"].ToString();
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <img src="~/images/logo.png" alt="PresenceTab" />
+            </div>
+            <nav class="nav-menu">
+                @if (userRole == "hrmanager")
+                {
+                    <a href="@Url.Action("Employees", "Hrmanager")"
+                       class="nav-link @(currentController == "Hrmanager" && currentAction == "Employees" || currentAction == "AddEmployee" || currentAction == "EditEmployee" ? "active" : "")">СПІВРОБІТНИКИ</a>
+                    <a href="@Url.Action("Job", "Hrmanager")"
+                       class="nav-link @(currentController == "Hrmanager" && currentAction == "Job" ? "active" : "")">ПОСАДИ</a>
+                    <a href="@Url.Action("Schedule", "Hrmanager")"
+                       class="nav-link @(currentController == "Hrmanager" && currentAction == "Schedule" || currentAction == "CreateSchedule" ? "active" : "")">ГРАФІК</a>
+                    <a href="@Url.Action("Tabulation", "Hrmanager")"
+                       class="nav-link @(currentController == "Hrmanager" && currentAction == "Tabulation" ? "active" : "")">ТАБЕЛЬ</a>
+                    <a href="@Url.Action("Notoriety", "Hrmanager")"
+                       class="nav-link @(currentController == "Hrmanager" && currentAction == "Notoriety" || currentAction == "NotorietyPreview" ? "active" : "")">ВІДОМОСТІ</a>
+                    <a href="@Url.Action("Statistics", "Hrmanager")"
+                       class="nav-link @(currentController == "Hrmanager" && currentAction == "Statistics" ? "active" : "")">СТАТИСТИКА</a>
+                }
+                else if (userRole == "manager")
+                {
+                    <a href="@Url.Action("Employees", "Manager")"
+                       class="nav-link @(currentController == "Manager" && currentAction == "Employees" ? "active" : "")">СПІВРОБІТНИКИ</a>
+                    <a href="@Url.Action("Schedule", "Manager")"
+                       class="nav-link @(currentController == "Manager" && currentAction == "Schedule" || currentAction == "CreateSchedule" ? "active" : "")">ГРАФІК</a>
+                    <a href="@Url.Action("Tabulation", "Manager")"
+                       class="nav-link @(currentController == "Manager" && currentAction == "Tabulation" ? "active" : "")">ТАБЕЛЬ</a>
+                    <a href="@Url.Action("Statistics", "Manager")"
+                       class="nav-link @(currentController == "Manager" && currentAction == "Statistics" ? "active" : "")">СТАТИСТИКА</a>
+                }
+                else if (userRole == "employee")
+                {
+                    <a href="@Url.Action("Schedule", "Employee")"
+                       class="nav-link @(currentController == "Employee" && currentAction == "Schedule" ? "active" : "")">ГРАФІК</a>
+                    <a href="@Url.Action("Statistics", "Employee")"
+                       class="nav-link @(currentController == "Employee" && currentAction == "Statistics" ? "active" : "")">СТАТИСТИКА</a>
+                }
+            </nav>
+            <div class="user-menu">
+                <div class="dropdown">
+                    <button class="dropbtn">
+                        <img src="~/images/user-icon.svg" alt="User" />
+                        <span class="arrow">▼</span>
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="@Url.Action("Logout", "Login")">Вийти</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,18 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+<div class="one-column">
+    @RenderBody()
+</div>
+
+@RenderSection("Scripts", required: false)
+
+<style>
+    .one-column {
+        background: white;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
