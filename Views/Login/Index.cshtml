@@ -1,0 +1,45 @@
+﻿@model PresenceTabMalik.Models.LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Вхід</title>
+    <link rel="stylesheet" href="~/css/login.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <img src="~/images/logo.png" alt="PresenceTab" />
+        </div>
+        <div class="form">
+            <div class="login-form">
+                <h2>Вхід до облікового запису</h2>
+                @using (Html.BeginForm("Index", "Login", FormMethod.Post))
+                {
+                    @Html.ValidationSummary(true, "", new { @class = "validation-summary" })
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Username, "Логін")
+                        @Html.TextBoxFor(m => m.Username, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Username, "", new { @class = "validation-message" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Password, "Пароль")
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "validation-message" })
+                    </div>
+                    <button type="submit" class="login-button">Увійти</button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>
