@@ -147,6 +147,7 @@
    - Автоматичне формування відомості з розрахунком заробітної плати
    - Попередній перегляд сформованої відомості
 <img src="Screenshots/HRManager-NotorietyPreviewAll.png" alt="HR Manager Notoriety Preview All">
+
    - Завантаження відомості у форматі PDF
 <img src="Screenshots/HRManager-NotorietyDownload.png" alt="HR Manager Notoriety Download">
 <img src="Screenshots/HRManager-NotorietyFile.png" alt="HR Manager Notoriety File">
