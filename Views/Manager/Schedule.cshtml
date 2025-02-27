@@ -1,0 +1,259 @@
+﻿@model PresenceTabMalik.Models.ScheduleViewModel
+@{
+    ViewData["Title"] = "Графік";
+    Layout = "_LayoutTwoColumns";
+}
+
+<div class="schedule-page">
+    <h3>Графік</h3>
+    
+    <div class="employee-search">
+        <div class="search-wrapper">
+            <span class="search-label">Співробітник:</span>
+            <div class="search-input-container">
+                <input type="text"
+                       id="employeeSearch"
+                       placeholder="Введіть ПІБ співробітника"
+                       autocomplete="off" />
+                <button type="button" id="clearSearch" class="clear-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="calendar-container">
+        <div class="calendar-content">
+            <div class="month-selector">
+                <a href="@Url.Action("Schedule", new { employeeId = ViewBag.CurrentEmployeeId, year = Model.CurrentDate.AddMonths(-1).Year, month = Model.CurrentDate.AddMonths(-1).Month })" class="month-nav">▲</a>
+                <h2>@Model.CurrentDate.ToString("MMMM yyyy", new System.Globalization.CultureInfo("uk-UA")).Substring(0, 1).ToUpper()@Model.CurrentDate.ToString("MMMM yyyy", new System.Globalization.CultureInfo("uk-UA")).Substring(1)</h2>
+                <a href="@Url.Action("Schedule", new { employeeId = ViewBag.CurrentEmployeeId, year = Model.CurrentDate.AddMonths(1).Year, month = Model.CurrentDate.AddMonths(1).Month })" class="month-nav">▼</a>
+            </div>
+
+            <div class="calendar">
+                <div class="weekdays">
+                    <div>ПН</div>
+                    <div>ВТ</div>
+                    <div>СР</div>
+                    <div>ЧТ</div>
+                    <div>ПТ</div>
+                    <div>СБ</div>
+                    <div>НД</div>
+                </div>
+                <div class="days">
+                    @{
+                        var firstDay = new DateTime(Model.CurrentDate.Year, Model.CurrentDate.Month, 1);
+                        var lastDay = firstDay.AddMonths(1).AddDays(-1);
+
+                        var currentWeekStart = firstDay;
+                        var dayOfWeek = (int)firstDay.DayOfWeek;
+                        if (dayOfWeek == 0)
+                            currentWeekStart = firstDay.AddDays(-6);
+                        else
+                            currentWeekStart = firstDay.AddDays(-(dayOfWeek - 1));
+
+                        while (currentWeekStart <= lastDay)
+                        {
+                            <div class="week">
+                                @for (int i = 0; i < 7; i++)
+                                {
+                                    var currentDate = currentWeekStart.AddDays(i);
+                                    var schedule = Model.Schedules.FirstOrDefault(s => s.Date.Date == currentDate.Date);
+                                    var statusClass = schedule?.Status switch
+                                    {
+                                        "Робочий" => "working",
+                                        "Вихідний" => "weekend",
+                                        "Відсутній" => "absent",
+                                        "Відпустка" => "vacation",
+                                        "Лікарняне" => "sick",
+                                        _ => "no-status"
+                                    };
+
+                                    <div class="day @statusClass">
+                                        @if (!string.IsNullOrEmpty(ViewBag.StatusToSet))
+                                        {
+                                            <form method="post" action="@Url.Action("ChangeStatus", "Manager")">
+                                                <input type="hidden" name="employeeId" value="@ViewBag.CurrentEmployeeId" />
+                                                <input type="hidden" name="date" value="@currentDate.ToString("yyyy-MM-dd")" />
+                                                <input type="hidden" name="status" value="@ViewBag.StatusToSet" />
+                                                <button type="submit" class="day-button">
+                                                    <div class="date">@currentDate.Day</div>
+                                                    @if (schedule?.Tab != null)
+                                                    {
+                                                        <div class="hours">
+                                                            @if (schedule.Tab.LeavingTime.HasValue)
+                                                            {
+                                                                @($"{schedule.Tab.ArrivalTime.Hours:D2}:{schedule.Tab.ArrivalTime.Minutes:D2}")
+                                                                <br />
+                                                                @($"{schedule.Tab.LeavingTime.Value.Hours:D2}:{schedule.Tab.LeavingTime.Value.Minutes:D2}")
+                                                            }
+                                                            else
+                                                            {
+                                                                @($"{schedule.Tab.ArrivalTime.Hours:D2}:{schedule.Tab.ArrivalTime.Minutes:D2}")
+                                                            }
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="hours">—</div>
+                                                    }
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <div class="date">@currentDate.Day</div>
+                                            @if (schedule?.Tab != null)
+                                            {
+                                                <div class="hours">
+                                                    @if (schedule.Tab.LeavingTime.HasValue)
+                                                    {
+                                                        @($"{schedule.Tab.ArrivalTime.Hours:D2}:{schedule.Tab.ArrivalTime.Minutes:D2}")
+                                                        <br />
+                                                        @($"{schedule.Tab.LeavingTime.Value.Hours:D2}:{schedule.Tab.LeavingTime.Value.Minutes:D2}")
+                                                    }
+                                                    else
+                                                    {
+                                                        @($"{schedule.Tab.ArrivalTime.Hours:D2}:{schedule.Tab.ArrivalTime.Minutes:D2}")
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="hours">—</div>
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            currentWeekStart = currentWeekStart.AddDays(7);
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item working">Робочий</div>
+                <div class="legend-item weekend">Вихідний</div>
+                <div class="legend-item absent">Відсутній</div>
+                <div class="legend-item sick">Лікарняне</div>
+                <div class="legend-item vacation">Відпустка</div>
+            </div>
+        </div>
+
+        <div class="status-buttons">
+            <a href="@Url.Action("Schedule", new { employeeId = ViewBag.CurrentEmployeeId, statusToSet = "Робочий", year = Model.CurrentDate.Year, month = Model.CurrentDate.Month })" class="status-button working">Змінити на робочий</a>
+            <a href="@Url.Action("Schedule", new { employeeId = ViewBag.CurrentEmployeeId, statusToSet = "Вихідний", year = Model.CurrentDate.Year, month = Model.CurrentDate.Month })" class="status-button weekend">Змінити на вихідний</a>
+            <a href="@Url.Action("Schedule", new { employeeId = ViewBag.CurrentEmployeeId, statusToSet = "Відсутній", year = Model.CurrentDate.Year, month = Model.CurrentDate.Month })" class="status-button absent">Змінити на відсутній</a>
+            <a href="@Url.Action("Schedule", new { employeeId = ViewBag.CurrentEmployeeId, statusToSet = "Лікарняне", year = Model.CurrentDate.Year, month = Model.CurrentDate.Month })" class="status-button sick">Змінити на лікарняне</a>
+            <a href="@Url.Action("Schedule", new { employeeId = ViewBag.CurrentEmployeeId, statusToSet = "Відпустка", year = Model.CurrentDate.Year, month = Model.CurrentDate.Month })" class="status-button vacation">Змінити на відпустка</a>
+        </div>
+    </div>
+</div>
+
+@section SideContent {
+    <div class="schedule-info">
+        <h3>@Model.CurrentDate.ToString("MMMM yyyy", new System.Globalization.CultureInfo("uk-UA")).Substring(0, 1).ToUpper()@Model.CurrentDate.ToString("MMMM yyyy", new System.Globalization.CultureInfo("uk-UA")).Substring(1)</h3>
+        <div class="info-container">
+            <div class="last-update">
+                <span>Дані станом на @Model.LastUpdateTime.ToString("dd.MM.yyyy HH:mm")</span>
+                <button onclick="location.reload()" class="refresh-button">
+                    <img src="~/images/refresh.svg" alt="Оновити" />
+                </button>
+            </div>
+            <div class="worked-hours">
+                <span class="label">Відпрацьовано:</span>
+                <span class="value">@Math.Round(Model.TotalHours, 2) годин</span>
+            </div>
+            <div class="info-divider"></div>
+            <a href="@Url.Action("CreateSchedule", "Manager")" class="create-schedule-btn">Створити новий графік</a>
+            @if (ViewBag.IsCurrentUser)
+            {
+                <div class="mark-buttons-divider"></div>
+                <div class="mark-buttons">
+                    <form method="post" action="@Url.Action("ArrivalMark", ViewContext.RouteData.Values["controller"].ToString())">
+                        <button type="submit" class="mark-button arrival">Відмітити прихід</button>
+                    </form>
+                    <form method="post" action="@Url.Action("LeavingMark", ViewContext.RouteData.Values["controller"].ToString())">
+                        <button type="submit" class="mark-button leaving">Відмітити вихід</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('employeeSearch');
+            const clearButton = document.getElementById('clearSearch');
+            const resultsContainer = document.getElementById('searchResults');
+
+            if (!searchInput || !clearButton || !resultsContainer) {
+                console.error('One or more elements not found');
+                return;
+            }
+
+            let debounceTimer;
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                if (this.value) {
+                    clearButton.style.display = 'block';
+                } else {
+                    clearButton.style.display = 'none';
+                }
+
+                debounceTimer = setTimeout(() => {
+                    const searchTerm = this.value;
+                    if (searchTerm.length > 0) {
+                        fetch(`/Manager/SearchEmployees?term=${encodeURIComponent(searchTerm)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                resultsContainer.innerHTML = '';
+                                if (data.length > 0) {
+                                    data.slice(0, 5).forEach(employee => {
+                                        const item = document.createElement('div');
+                                        item.className = 'search-result-item';
+                                        item.innerText = employee.fullName;
+                                        item.onclick = () => {
+                                            window.location.href = `/Manager/Schedule?employeeId=${employee.id}`;
+                                        };
+                                        resultsContainer.appendChild(item);
+                                    });
+                                    resultsContainer.classList.add('active');
+                                } else {
+                                    resultsContainer.classList.remove('active');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                resultsContainer.classList.remove('active');
+                            });
+                    } else {
+                        resultsContainer.classList.remove('active');
+                    }
+                }, 300);
+            });
+
+            clearButton.addEventListener('click', function () {
+                searchInput.value = '';
+                resultsContainer.classList.remove('active');
+                this.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                    resultsContainer.classList.remove('active');
+                }
+            });
+        });
+    </script>
+}

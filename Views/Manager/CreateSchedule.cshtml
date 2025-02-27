@@ -1,0 +1,103 @@
+﻿@{
+    ViewData["Title"] = "Створити графік";
+    Layout = "_LayoutOneColumn";
+}
+
+<div class="schedule-container">
+    <h3>Створити графік</h3>
+
+    <form id="scheduleForm" method="post">
+        <div class="form-content">
+            <div class="form-group">
+                <label>Співробітник:</label>
+                <div class="input-wrapper">
+                    <input type="text"
+                           id="employeeSearch"
+                           placeholder="Введіть ПІБ співробітника"
+                           autocomplete="off"
+                           class="form-input">
+                    <input type="hidden" id="employeeId" name="employeeId">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Початкова дата:</label>
+                <div class="input-wrapper">
+                    <input type="date" name="beginDate" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Кінцева дата:</label>
+                <div class="input-wrapper">
+                    <input type="date" name="endDate" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Статус:</label>
+                <div class="input-wrapper">
+                    <select name="status" class="form-select">
+                        <option value="Робочий">Робочий</option>
+                        <option value="Вихідний">Вихідний</option>
+                        <option value="Відсутній">Відсутній</option>
+                        <option value="Відпустка">Відпустка</option>
+                        <option value="Лікарняне">Лікарняне</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-buttons">
+            <button type="submit" class="submit-button">Додати</button>
+            <a href="@Url.Action("Schedule")" class="cancel-button">Відмінити</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('employeeSearch');
+        const searchResults = document.getElementById('searchResults');
+        const employeeIdInput = document.getElementById('employeeId');
+
+        searchInput.addEventListener('input', function() {
+            const term = this.value;
+            
+            if (term.length > 0) {
+                fetch(`/Manager/SearchEmployees?term=${encodeURIComponent(term)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        searchResults.innerHTML = '';
+                        searchResults.style.display = 'block';
+                        
+                        const limitedData = data.slice(0, 5);
+                        
+                        limitedData.forEach(employee => {
+                            const div = document.createElement('div');
+                            div.className = 'search-result-item';
+                            div.textContent = employee.fullName;
+                            div.onclick = function() {
+                                searchInput.value = employee.fullName;
+                                employeeIdInput.value = employee.id;
+                                searchResults.style.display = 'none';
+                            };
+                            searchResults.appendChild(div);
+                        });
+                    })
+                    .catch(error => console.error('Ошибка:', error));
+            } else {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+    });
+</script>

@@ -1,0 +1,208 @@
+﻿@{
+    ViewData["Title"] = "Співробітники";
+    Layout = "_LayoutTwoColumns";
+}
+
+<div class="employees-page">
+    <h3>Співробітники</h3>
+
+    <div class="employees-content">
+        <div class="employees-search">
+            <input type="text"
+                   id="employeeSearch"
+                   placeholder="Пошук">
+            <button type="button" id="searchButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="employees-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-sort="fullName" data-direction="asc">ПІБ<span class="sort-arrow">⇅</span></th>
+                        <th data-sort="birthDate" data-direction="asc">Дата народження<span class="sort-arrow">⇅</span></th>
+                        <th data-sort="hireDate" data-direction="asc">Дата прийому<span class="sort-arrow">⇅</span></th>
+                        <th data-sort="position" data-direction="asc">Посада<span class="sort-arrow">⇅</span></th>
+                        <th data-sort="phone" data-direction="asc">Контактний номер<span class="sort-arrow">⇅</span></th>
+                        <th data-sort="email" data-direction="asc">Контактний e-mail<span class="sort-arrow">⇅</span></th>
+                    </tr>
+                </thead>
+                <tbody id="employeeTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section SideContent {
+    <div class="employee-details">
+        <div class="employee-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#BABABA" stroke-width="1">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+        </div>
+
+        <div class="employee-info">
+            <div class="info-row"><label>ПІБ:</label><span id="detailName"></span></div>
+            <div class="info-row"><label>Дата народження:</label><span id="detailBirthday"></span></div>
+            <div class="info-row"><label>Дата прийому:</label><span id="detailHireDate"></span></div>
+            <div class="info-row"><label>Посада:</label><span id="detailPosition"></span></div>
+            <div class="info-row"><label>Контактний номер:</label><span id="detailPhone"></span></div>
+            <div class="info-row"><label>Контактний e-mail:</label><span id="detailEmail"></span></div>
+            <div class="info-row"><label>Статус:</label><span id="detailStatus"></span></div>
+            <div class="info-row">
+                <label>К-сть відпрацьованих годин (місяць):</label>
+                <span id="detailHours"></span>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let selectedEmployeeId = null;
+        const searchInput = document.getElementById('employeeSearch');
+        const searchButton = document.querySelector('#searchButton');
+
+        async function loadEmployees(searchTerm = '', sortField = '', sortDir = 'asc') {
+            try {
+                const params = new URLSearchParams({
+                    term: searchTerm,
+                    sortField: sortField,
+                    sortDir: sortDir
+                });
+
+                const response = await fetch(`/Manager/SearchAllEmployees?${params.toString()}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const employees = await response.json();
+                displayEmployees(employees);
+
+                if (employees.length > 0 && !selectedEmployeeId) {
+                    selectEmployee(employees[0].id);
+                }
+            } catch (error) {
+                console.error('Error loading employees:', error);
+            }
+        }
+
+        document.querySelectorAll('.employees-table th[data-sort]').forEach(th => {
+            th.style.cursor = 'pointer'; 
+            th.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const sortField = this.dataset.sort;
+                const currentDir = this.dataset.direction || 'asc';
+                const sortDir = currentDir === 'asc' ? 'desc' : 'asc';
+
+                document.querySelectorAll('th[data-sort]').forEach(header => {
+                    header.dataset.direction = '';
+                });
+                this.dataset.direction = sortDir;
+
+                loadEmployees(searchInput.value, sortField, sortDir);
+
+                return false;
+            });
+        });
+
+        function displayEmployees(employees) {
+            const tbody = document.getElementById('employeeTableBody');
+            tbody.innerHTML = '';
+
+            if (employees.length === 0) {
+                const tr = document.createElement('tr');
+                tr.dataset.employeeId = employee.id;
+                tbody.appendChild(tr);
+                return;
+            }
+
+            const positionMap = {
+                'Admin': 'HR-Менеджер',
+                'Manager': 'Керівник',
+                'Worker': 'Співробітник'
+            };
+
+            employees.forEach(employee => {
+                const tr = document.createElement('tr');
+                if (employee.id === selectedEmployeeId) {
+                    tr.classList.add('selected');
+                }
+                tr.dataset.employeeId = employee.id;
+
+                tr.innerHTML = `
+                <td>${employee.fullName}</td>
+                <td>${employee.birthDate}</td>
+                <td>${employee.hireDate}</td>
+                <td>${positionMap[employee.position] || employee.position}</td>
+                <td>${employee.phone}</td>
+                <td>${employee.email}</td>
+            `;
+
+                tr.addEventListener('click', () => selectEmployee(employee.id));
+                tbody.appendChild(tr);
+            });
+        }
+
+        function selectEmployee(employeeId) {
+            selectedEmployeeId = employeeId;
+            loadEmployeeDetails(employeeId);
+
+            document.querySelectorAll('#employeeTableBody tr').forEach(row => {
+                row.classList.remove('selected');
+                if (row.dataset.employeeId === employeeId.toString()) {
+                    row.classList.add('selected');
+                }
+            });
+        }
+
+        async function loadEmployeeDetails(employeeId) {
+            try {
+                const response = await fetch(`/Manager/GetEmployeeDetails?employeeId=${employeeId}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const details = await response.json();
+                displayEmployeeDetails(details);
+            } catch (error) {
+                console.error('Error loading employee details:', error);
+            }
+        }
+
+        function displayEmployeeDetails(details) {
+            document.getElementById('detailName').textContent = details.fullName;
+            document.getElementById('detailBirthday').textContent = details.birthDate;
+            document.getElementById('detailHireDate').textContent = details.hireDate;
+            document.getElementById('detailPosition').textContent = details.position;
+            document.getElementById('detailPhone').textContent = details.phone;
+            document.getElementById('detailEmail').textContent = details.email;
+
+            const statusElement = document.getElementById('detailStatus');
+            statusElement.textContent = details.status || '—';
+
+            statusElement.classList.remove('status-working', 'status-weekend', 'status-absent', 'status-vacation', 'status-sick');
+
+            if (details.status) {
+                const statusClass = details.status.toLowerCase().replace(/\s+/g, '-');
+                statusElement.classList.add(`status-${statusClass}`);
+            }
+
+            document.getElementById('detailHours').textContent = details.workedHours || '0';
+        }
+
+
+        loadEmployees();
+
+        searchButton.addEventListener('click', () => {
+            loadEmployees(searchInput.value);
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadEmployees(searchInput.value);
+            }
+        });
+    });
+</script>
