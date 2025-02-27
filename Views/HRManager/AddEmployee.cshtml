@@ -1,0 +1,67 @@
+﻿@{
+    ViewData["Title"] = "Додати співробітника";
+    Layout = "_LayoutOneColumn";
+}
+
+<div class="add-employee-container">
+    <h3>Додати співробітника</h3>
+
+    <form method="post" class="add-employee-form">
+        <div class="form-content">
+            <div class="form-group">
+                <label>ПІБ:</label>
+                <div class="input-wrapper">
+                    <input type="text" name="fullName" class="form-input" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Дата народження:</label>
+                <div class="input-wrapper">
+                    <input type="date" name="birthdayDate" class="form-input" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Посада:</label>
+                <div class="input-wrapper">
+                    <select name="jobName" class="form-select" required>
+                        <option value="" disabled selected>Оберіть посаду</option>
+                        <option value="Admin">HR-Менеджер</option>
+                        <option value="Manager">Керівник</option>
+                        <option value="Worker">Співробітник</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Контактний номер:</label>
+                <div class="input-wrapper">
+                    <input type="tel" name="phoneNumber" class="form-input"
+                           pattern="\+[0-9]{6,15}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Контактний e-mail:</label>
+                <div class="input-wrapper">
+                    <input type="email" name="email" class="form-input" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Ім'я користувача:</label>
+                <div class="input-wrapper">
+                    <input type="text" name="username" class="form-input" required>
+                </div>
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-buttons">
+            <button type="submit" class="submit-button">Додати</button>
+            <a href="@Url.Action("Employees")" class="cancel-button">Відмінити</a>
+        </div>
+    </form>
+</div>

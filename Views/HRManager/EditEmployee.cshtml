@@ -1,0 +1,83 @@
+﻿@{
+    ViewData["Title"] = "Редагувати співробітника";
+    Layout = "_LayoutOneColumn";
+}
+
+<div class="edit-employee-container">
+    <h3>Редагувати співробітника</h3>
+
+    <form method="post" class="edit-employee-form">
+        <input type="hidden" name="id" value="@ViewBag.Employee.Id">
+        
+        <div class="form-content">
+            <div class="form-group">
+                <label>ПІБ:</label>
+                <div class="input-wrapper">
+                    <input type="text" name="fullName" class="form-input" required value="@ViewBag.Employee.FullName">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Дата народження:</label>
+                <div class="input-wrapper">
+                    <input type="date" name="birthdayDate" class="form-input" required value="@ViewBag.Employee.BirthdayDate.ToString("yyyy-MM-dd")">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Посада:</label>
+                <div class="input-wrapper">
+                    <select name="jobName" class="form-select" required>
+                        @if (ViewBag.Employee.JobName == "Admin")
+                        {
+                            <option value="Admin" selected>HR-Менеджер</option>
+                        }
+                        else
+                        {
+                            <option value="Admin">HR-Менеджер</option>
+                        }
+                        
+                        @if (ViewBag.Employee.JobName == "Manager")
+                        {
+                            <option value="Manager" selected>Керівник</option>
+                        }
+                        else
+                        {
+                            <option value="Manager">Керівник</option>
+                        }
+                        
+                        @if (ViewBag.Employee.JobName == "Worker")
+                        {
+                            <option value="Worker" selected>Співробітник</option>
+                        }
+                        else
+                        {
+                            <option value="Worker">Співробітник</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Контактний номер:</label>
+                <div class="input-wrapper">
+                    <input type="tel" name="phoneNumber" class="form-input" pattern="\+[0-9]{6,15}" required value="@ViewBag.Employee.PhoneNumber">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Контактний e-mail:</label>
+                <div class="input-wrapper">
+                    <input type="email" name="email" class="form-input" required value="@ViewBag.Employee.Email">
+                </div>
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-buttons">
+            <button type="submit" class="submit-button">Змінити</button>
+            <a href="@Url.Action("Employees")" class="cancel-button">Відмінити</a>
+        </div>
+    </form>
+</div>

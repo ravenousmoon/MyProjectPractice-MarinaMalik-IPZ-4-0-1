@@ -1,0 +1,158 @@
+﻿@{
+    ViewData["Title"] = "Відомості";
+    Layout = "_LayoutOneColumn";
+}
+
+<div class="notoriety-container">
+    <h3>Розрахунок відпрацьованих годин та заробітної плати</h3>
+
+    <form id="notorietyForm" action="@Url.Action("GenerateNotoriety", "Hrmanager")" method="post">
+        <div class="form-content">
+            <div class="form-group">
+                <label>Період:</label>
+                <div class="input-wrapper">
+                    <select id="periodSelect" name="period" class="form-select">
+                        <option value="current_month" selected>Поточний місяць (@DateTime.Now.ToString("MM.yyyy"))</option>
+                        <option value="half_year">Пів року</option>
+                        <option value="year">Рік</option>
+                        <option value="all_time">За весь час</option>
+                        <option value="custom">Довільний період</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="customDateRange" class="form-group date-range" style="display: none;">
+                <label>Від:</label>
+                <div class="input-wrapper">
+                    <input type="date" name="startDate" id="startDate" class="form-input">
+                </div>
+            </div>
+
+            <div id="customDateRangeEnd" class="form-group date-range" style="display: none;">
+                <label>До:</label>
+                <div class="input-wrapper">
+                    <input type="date" name="endDate" id="endDate" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Співробітник:</label>
+                <div class="input-wrapper">
+                    <input type="text"
+                           id="employeeSearch"
+                           placeholder="Введіть ПІБ співробітника"
+                           autocomplete="off"
+                           class="form-input">
+                    <input type="hidden" id="employeeId" name="employeeId">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Посада:</label>
+                <div class="input-wrapper">
+                    <select id="jobSelect" name="jobName" class="form-select">
+                        <!-- Должности будут загружены динамически -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-buttons">
+            <button type="submit" class="submit-button">Створити відомість</button>
+            <a href="@Url.Action("Schedule", "Hrmanager")" class="cancel-button">Відмінити</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const periodSelect = document.getElementById('periodSelect');
+        const customDateRange = document.getElementById('customDateRange');
+        const customDateRangeEnd = document.getElementById('customDateRangeEnd');
+
+        periodSelect.addEventListener('change', function () {
+            if (this.value === 'custom') {
+                customDateRange.style.display = 'grid';
+                customDateRangeEnd.style.display = 'grid';
+            } else {
+                customDateRange.style.display = 'none';
+                customDateRangeEnd.style.display = 'none';
+            }
+        });
+
+        const searchInput = document.getElementById('employeeSearch');
+        const searchResults = document.getElementById('searchResults');
+        const employeeIdInput = document.getElementById('employeeId');
+        const jobSelect = document.getElementById('jobSelect');
+
+        fetch('/Hrmanager/GetJobsList')
+            .then(response => response.json())
+            .then(data => {
+                jobSelect.innerHTML = '';
+
+                data.forEach(job => {
+                    const option = document.createElement('option');
+                    option.value = job.id;
+                    option.textContent = job.name;
+                    jobSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Ошибка загрузки должностей:', error));
+
+        searchInput.addEventListener('input', function () {
+            const term = this.value;
+
+            if (term.length > 0) {
+                fetch(`/Hrmanager/SearchEmployees?term=${encodeURIComponent(term)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        searchResults.innerHTML = '';
+                        searchResults.style.display = 'block';
+
+                        const limitedData = data.slice(0, 5);
+
+                        limitedData.forEach(employee => {
+                            const div = document.createElement('div');
+                            div.className = 'search-result-item';
+                            div.textContent = employee.fullName;
+                            div.onclick = function () {
+                                searchInput.value = employee.fullName;
+                                employeeIdInput.value = employee.id;
+                                searchResults.style.display = 'none';
+
+                                fetch(`/Hrmanager/GetEmployeeJob?employeeId=${employee.id}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            jobSelect.value = data.jobName;
+                                        }
+                                    })
+                                    .catch(error => console.error('Ошибка:', error));
+                            };
+                            searchResults.appendChild(div);
+                        });
+                    })
+                    .catch(error => console.error('Ошибка:', error));
+            } else {
+                searchResults.style.display = 'none';
+                employeeIdInput.value = '';
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        jobSelect.addEventListener('change', function () {
+            if (searchInput.value) {
+                searchInput.value = '';
+                employeeIdInput.value = '';
+            }
+        });
+    });
+</script>

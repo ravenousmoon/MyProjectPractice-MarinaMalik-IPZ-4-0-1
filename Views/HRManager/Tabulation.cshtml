@@ -1,0 +1,119 @@
+﻿@model List<TabViewModel>
+@{
+    ViewData["Title"] = "Табель";
+    Layout = "_LayoutOneColumn";
+}
+
+<h3>Табель</h3>
+
+<div class="tab-controls">
+    <div class="tab-controls-left">
+        <span class="current-time">Дані станом на @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</span>
+        <button class="refresh-button" onclick="location.reload()">
+            <img src="~/images/refresh.svg" alt="Обновить">
+        </button>
+    </div>
+
+    <div class="tab-controls-right">
+        <div class="date-filter">
+            <input type="date"
+                   id="dateFilter"
+                   value="@(((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd"))"
+                   onchange="handleDateChange(this)">
+        </div>
+
+        <div class="search-wrapper">
+            <input type="text"
+                   id="searchInput"
+                   placeholder="Пошук за ПІБ"
+                   value="@ViewBag.SearchTerm">
+            <button class="search-button" onclick="handleSearch()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="tab-table">
+    <table>
+        <thead>
+            <tr>
+                <th onclick="handleSort('fullName')" class="sortable">
+                    ПІБ
+                    <span class="sort-arrow">⇅</span>
+                </th>
+                <th onclick="handleSort('arrivalTime')" class="sortable">
+                    Час приходу
+                    <span class="sort-arrow">⇅</span>
+                </th>
+                <th onclick="handleSort('leavingTime')" class="sortable">
+                    Час виходу
+                    <span class="sort-arrow">⇅</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var employee in Model)
+                {
+                    <tr>
+                        <td>@employee.FullName</td>
+                        <td>@employee.ArrivalTime.ToString(@"hh\:mm")</td>
+                        <td>@(employee.LeavingTime.HasValue ? employee.LeavingTime.Value.ToString(@"hh\:mm") : "—")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function handleDateChange(input) {
+            const params = new URLSearchParams({
+                date: input.value,
+                searchTerm: document.getElementById('searchInput').value || '',
+                sortField: '@ViewBag.SortField' || 'fullName',
+                sortDir: '@ViewBag.SortDir' || 'asc'
+            });
+
+            window.location.href = '/Manager/Tabulation?' + params.toString();
+        }
+
+        function handleSearch() {
+            const params = new URLSearchParams({
+                date: document.getElementById('dateFilter').value,
+                searchTerm: document.getElementById('searchInput').value || '',
+                sortField: '@ViewBag.SortField' || 'fullName',
+                sortDir: '@ViewBag.SortDir' || 'asc'
+            });
+
+            window.location.href = '/Manager/Tabulation?' + params.toString();
+        }
+
+        function handleSort(field) {
+            const currentSortField = '@ViewBag.SortField' || 'fullName';
+            const currentSortDir = '@ViewBag.SortDir' || 'asc';
+            const newDir = (field === currentSortField && currentSortDir === 'asc') ? 'desc' : 'asc';
+
+            const params = new URLSearchParams({
+                date: document.getElementById('dateFilter').value,
+                searchTerm: document.getElementById('searchInput').value || '',
+                sortField: field,
+                sortDir: newDir
+            });
+
+            window.location.href = '/Manager/Tabulation?' + params.toString();
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+    </script>
+}

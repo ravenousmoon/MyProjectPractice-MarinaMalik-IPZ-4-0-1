@@ -1,0 +1,142 @@
+﻿@model List<PresenceTabMalik.Models.NotorietyViewModel>
+@{
+    ViewData["Title"] = "Перегляд відомості";
+    Layout = "_LayoutOneColumn";
+    
+    string periodText = "";
+
+    if (ViewBag.Period == "custom")
+    {
+        periodText = $"Період з {ViewBag.StartDate:dd.MM.yyyy} по {ViewBag.EndDate:dd.MM.yyyy}";
+    }
+    else if (ViewBag.Period == "current_month")
+    {
+        DateTime date = ViewBag.StartDate;
+        string monthName = date.ToString("MMMM yyyy", new System.Globalization.CultureInfo("uk-UA"));
+        if (!string.IsNullOrEmpty(monthName))
+            monthName = char.ToUpper(monthName[0]) + monthName.Substring(1);
+        periodText = monthName;
+    }
+    else if (ViewBag.Period == "half_year")
+    {
+        periodText = $"За останні пів року ({ViewBag.StartDate:dd.MM.yyyy} - {ViewBag.EndDate:dd.MM.yyyy})";
+    }
+    else if (ViewBag.Period == "year")
+    {
+        periodText = $"За останній рік ({ViewBag.StartDate:dd.MM.yyyy} - {ViewBag.EndDate:dd.MM.yyyy})";
+    }
+    else if (ViewBag.Period == "all_time")
+    {
+        periodText = "За весь час";
+    }
+    else
+    {
+        periodText = $"Період з {ViewBag.StartDate:dd.MM.yyyy} по {ViewBag.EndDate:dd.MM.yyyy}";
+    }
+
+    string positionFilter = ViewBag.JobName ?? "Всі посади";
+    switch (positionFilter)
+    {
+        case "Admin": positionFilter = "HR-Менеджер"; break;
+        case "Manager": positionFilter = "Керівник"; break;
+        case "Worker": positionFilter = "Співробітник"; break;
+    }
+}
+
+<div class="notoriety-preview-container">
+    <h3>Перегляд відомості</h3>
+
+    <hr class="form-divider">
+
+    <div class="notoriety-info">
+        <p><strong>Період:</strong> @periodText</p>
+        <p><strong>Посада:</strong> @positionFilter</p>
+        <p><strong>Дата формування:</strong> @DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
+    </div>
+
+    <div class="notoriety-document-preview">
+        <div class="document-header">
+            <h4>Відомість нарахування заробітної плати</h4>
+        </div>
+
+        <table class="notoriety-table">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>ПІБ</th>
+                    <th>Посада</th>
+                    <th>Кількість відпрацьованих годин</th>
+                    <th>Ставка за годину</th>
+                    <th>Заробітна плата</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    for (int i = 0; i < Model.Count; i++)
+                    {
+                        var item = Model[i];
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td>@item.FullName</td>
+                            <td>@item.Position</td>
+                            <td>@item.HoursWorked год.</td>
+                            <td>@item.RatePerHour грн.</td>
+                            <td>@item.Salary грн.</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="no-data">Немає даних для відображення</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" class="total-label">Загальна сума:</td>
+                    <td class="total-value">@ViewBag.TotalSalary грн.</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="document-footer">
+            <div class="signature-block">
+                <p>Директор ______________________</p>
+                <p>Головний бухгалтер ______________________</p>
+            </div>
+        </div>
+    </div>
+
+    <hr class="form-divider">
+
+    <div class="notoriety-actions">
+        @if (ViewBag.EmployeeId != null && ViewBag.EmployeeId is int && (int)ViewBag.EmployeeId > 0)
+        {
+            <a href="@Url.Action("DownloadNotorietyForEmployee", "Hrmanager", new {
+            employeeId = ViewBag.EmployeeId,
+            period = ViewBag.Period,
+            startDate = ViewBag.StartDate,
+            endDate = ViewBag.EndDate
+        })" class="download-button">
+                Завантажити відомість
+            </a>
+        }
+        else
+        {
+            <a href="@Url.Action("DownloadNotorietyForAll", "Hrmanager", new {
+            period = ViewBag.Period,
+            jobName = ViewBag.JobName,
+            startDate = ViewBag.StartDate,
+            endDate = ViewBag.EndDate
+        })" class="download-button">
+                Завантажити відомість
+            </a>
+        }
+
+        <a href="@Url.Action("Notoriety", "Hrmanager")" class="back-button">
+            Повернутися до фільтрів
+        </a>
+    </div>
+</div>

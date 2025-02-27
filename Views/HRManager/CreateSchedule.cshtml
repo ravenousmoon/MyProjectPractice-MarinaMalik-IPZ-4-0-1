@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Створити графік";
+    Layout = "_LayoutOneColumn";
+}
+
+<div class="schedule-container">
+    <h3>Створити графік</h3>
+
+    <form id="scheduleForm" method="post">
+        <div class="form-content">
+            <div class="form-group">
+                <label>Дата:</label>
+                <div class="input-wrapper">
+                    <input type="date" name="instDate" class="form-input" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Статус дня:</label>
+                <div class="input-wrapper">
+                    <select name="status" class="form-select" required>
+                        <option value="" disabled selected>Оберіть статус</option>
+                        <option value="true">Робочий</option>
+                        <option value="false">Вихідний</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-buttons">
+            <button type="submit" class="submit-button">Зберегти</button>
+            <a href="@Url.Action("Schedule")" class="cancel-button">Відмінити</a>
+        </div>
+    </form>
+</div>

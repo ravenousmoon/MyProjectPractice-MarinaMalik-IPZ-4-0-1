@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "Список посад";
+    Layout = "_LayoutOneColumn";
+}
+
+<h3>Список посад</h3>
+
+<div class="search-wrapper" style="justify-content: flex-end; margin-bottom: 24px;">
+    <input type="text"
+           id="jobSearch"
+           placeholder="Пошук посади">
+    <button id="searchButton">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+    </button>
+</div>
+
+<div class="job-table">
+    <table>
+        <thead>
+            <tr>
+                <th data-sort="name">Посада <span class="sort-arrow">⇅</span></th>
+                <th data-sort="rateperhour">Ставка за годину <span class="sort-arrow">⇅</span></th>
+                <th data-sort="approvaldate">Дата затвердження <span class="sort-arrow">⇅</span></th>
+            </tr>
+        </thead>
+        <tbody id="jobTableBody">
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let currentSortField = 'name';
+            let currentSortDir = 'asc';
+
+            const searchInput = document.getElementById('jobSearch');
+            const searchButton = document.getElementById('searchButton');
+
+            async function loadJobs(searchTerm = '') {
+                try {
+                    const params = new URLSearchParams({
+                        term: searchTerm,
+                        sortField: currentSortField,
+                        sortDir: currentSortDir
+                    });
+
+                    const response = await fetch(`/HRManager/SearchJobs?${params}`);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const jobs = await response.json();
+                    displayJobs(jobs);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            function displayJobs(jobs) {
+                const tbody = document.getElementById('jobTableBody');
+                tbody.innerHTML = '';
+
+                jobs.forEach(job => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${job.name}</td>
+                        <td>${job.ratePerHour}</td>
+                        <td>${job.approvalDate}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.style.cursor = 'pointer';
+                th.addEventListener('click', function() {
+                    const field = this.dataset.sort;
+                    currentSortDir = field === currentSortField && currentSortDir === 'asc' ? 'desc' : 'asc';
+                    currentSortField = field;
+
+                    loadJobs(searchInput.value);
+                });
+            });
+
+            searchButton.addEventListener('click', () => {
+                loadJobs(searchInput.value);
+            });
+
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    loadJobs(searchInput.value);
+                }
+            });
+
+            loadJobs();
+        });
+    </script>
+}
